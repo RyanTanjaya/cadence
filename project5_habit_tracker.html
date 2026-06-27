@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 5 — Habit Tracker (Web)</title>
+<style>
+  :root {
+    --purple: #8b5cf6;
+    --purple-dark: #7c3aed;
+    --purple-light: #ede9fe;
+    --navy: #0f172a;
+    --slate: #334155;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --green: #10b981;
+    --green-light: #d1fae5;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --teal: #14b8a6;
+    --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px; }
+
+  .sidebar { width: var(--sidebar-w); background: var(--navy); position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; padding: 24px 0 40px; z-index: 100; }
+  .sidebar-logo { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; }
+  .sidebar-logo .project { color: #c4b5fd; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+  .sidebar-logo .name { color: #fff; font-weight: 800; font-size: 15px; margin-top: 3px; }
+  .nav-section { padding: 10px 20px 4px; color: rgba(255,255,255,0.3); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .nav-link { display: block; padding: 7px 20px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 13px; border-left: 3px solid transparent; transition: all .15s; }
+  .nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,0.06); border-left-color: var(--purple); }
+  .nav-link.sub { padding-left: 32px; font-size: 12px; }
+  .main { margin-left: var(--sidebar-w); max-width: 900px; padding: 48px 48px 100px; }
+
+  .page-header { background: linear-gradient(135deg, #2e1065 0%, #4c1d95 50%, #2e1065 100%); border-radius: 16px; padding: 40px; margin-bottom: 48px; color: white; position: relative; overflow: hidden; }
+  .page-header::before { content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px; background: rgba(139,92,246,0.2); border-radius: 50%; }
+  .page-header::after { content: ''; position: absolute; bottom: -40px; left: 30%; width: 160px; height: 160px; background: rgba(20,184,166,0.15); border-radius: 50%; }
+  .page-header .tag { color: #c4b5fd; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; position: relative; }
+  .page-header h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; position: relative; }
+  .page-header p { color: rgba(255,255,255,0.6); font-size: 14px; max-width: 520px; position: relative; }
+  .header-badges { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; position: relative; }
+  .hbadge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 500; }
+  .hbadge.purple { background: rgba(139,92,246,0.3); border-color: rgba(139,92,246,0.6); color: #c4b5fd; }
+  .hbadge.green { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); color: #6ee7b7; }
+  .hbadge.amber { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.4); color: #fcd34d; }
+
+  .section { margin-bottom: 56px; }
+  h2 { font-size: 21px; font-weight: 800; color: var(--navy); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  h3 { font-size: 15px; font-weight: 700; color: var(--slate); margin: 28px 0 12px; }
+  h4 { font-size: 13px; font-weight: 700; color: var(--purple-dark); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .05em; }
+  p { margin-bottom: 14px; }
+  a { color: var(--purple-dark); text-decoration: none; }
+  strong { color: var(--navy); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  .table-wrap { overflow-x: auto; margin: 14px 0 22px; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead { background: var(--navy); color: white; }
+  thead th { padding: 11px 16px; text-align: left; font-weight: 600; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #faf8ff; }
+  tbody td { padding: 10px 16px; vertical-align: top; }
+  tbody td:first-child { font-weight: 600; color: var(--slate); }
+
+  pre { background: var(--navy); color: #e2e8f0; border-radius: 10px; padding: 20px; overflow-x: auto; font-size: 13px; line-height: 1.65; margin: 14px 0; font-family: 'Fira Code', Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+  code { background: #ede9fe; color: #7c3aed; padding: 2px 6px; border-radius: 5px; font-size: 13px; font-family: 'Fira Code', Consolas, monospace; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  .prompt-block { background: #f5f3ff; border-left: 4px solid var(--purple); border-radius: 0 10px 10px 0; padding: 14px 52px 14px 18px; margin: 12px 0; position: relative; }
+  .prompt-label { font-size: 10px; font-weight: 700; color: var(--purple-dark); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .prompt-block pre { background: transparent; color: var(--slate); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13.5px; line-height: 1.6; margin: 0; padding: 0; font-style: italic; }
+  .copy-btn { position: absolute; top: 12px; right: 12px; background: var(--purple); color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; opacity: 0; transition: opacity .2s; z-index: 10; }
+  .prompt-block:hover .copy-btn { opacity: 1; }
+
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .feature-card .fc-icon { font-size: 22px; margin-bottom: 8px; }
+  .feature-card .fc-title { font-weight: 700; color: var(--navy); font-size: 14px; margin-bottom: 4px; }
+  .feature-card .fc-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .feature-card.highlight { border-color: var(--purple); background: #faf8ff; }
+
+  .phase-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .phase-header { padding: 14px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+  .phase-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .phase-dot.mvp { background: var(--green); }
+  .phase-dot.polish { background: var(--amber); }
+  .phase-dot.stretch { background: var(--purple); }
+  .phase-header .ph-title { font-weight: 700; font-size: 14px; color: var(--navy); }
+  .phase-header .ph-tag { margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .ph-tag.mvp { background: var(--green-light); color: #065f46; }
+  .ph-tag.polish { background: #fef3c7; color: #92400e; }
+  .ph-tag.stretch { background: #ede9fe; color: #5b21b6; }
+  .phase-body { padding: 16px 20px; }
+  .phase-body ul { list-style: none; padding: 0; }
+  .phase-body ul li { padding: 5px 0; font-size: 13.5px; display: flex; gap: 8px; align-items: flex-start; border-bottom: 1px solid var(--border); }
+  .phase-body ul li:last-child { border-bottom: none; }
+  .phase-body ul li::before { content: '→'; color: var(--purple); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+  .build-list { list-style: none; padding: 0; margin: 16px 0; }
+  .build-list li { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .build-list li:last-child { border-bottom: none; }
+  .step-num { width: 28px; height: 28px; background: linear-gradient(135deg, var(--purple), var(--purple-dark)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .step-body { flex: 1; }
+  .step-title { font-weight: 700; font-size: 14px; color: var(--navy); }
+  .step-desc { font-size: 13px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+
+  .info { background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-size: 13.5px; color: var(--slate); display: flex; gap: 10px; }
+  .tip { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-size: 13.5px; color: #134e4a; display: flex; gap: 10px; }
+  .warn { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-size: 13.5px; color: #9a3412; display: flex; gap: 10px; }
+  .insight { background: linear-gradient(135deg, #2e1065 0%, #4c1d95 100%); border-radius: 12px; padding: 20px 24px; margin: 16px 0; color: white; }
+  .insight .i-label { font-size: 10px; font-weight: 700; color: #c4b5fd; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; }
+  .insight .i-text { font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+  .insight strong { color: #e9d5ff; }
+  .info-icon { flex-shrink: 0; margin-top: 1px; }
+
+  .screen-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .screen-header { background: linear-gradient(135deg, #2e1065, #4c1d95); padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+  .screen-num { background: rgba(139,92,246,0.3); border: 1px solid rgba(139,92,246,0.5); color: #c4b5fd; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .screen-title { color: white; font-weight: 700; font-size: 15px; }
+  .screen-body { padding: 20px; }
+
+  .pattern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .pattern-card { border-radius: 12px; padding: 18px; border: 1px solid var(--border); }
+  .pattern-card.use { background: #f0fdf4; border-color: #bbf7d0; }
+  .pattern-card.avoid { background: #fff1f2; border-color: #fecdd3; }
+  .pattern-card .pc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+  .pattern-card.use .pc-label { color: #15803d; }
+  .pattern-card.avoid .pc-label { color: #be123c; }
+  .pattern-card .pc-title { font-weight: 700; font-size: 14px; color: var(--navy); margin-bottom: 6px; }
+  .pattern-card .pc-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+  .schema-block { background: var(--navy); border-radius: 10px; padding: 20px; margin: 12px 0; }
+  .schema-block pre { margin: 0; padding: 0; background: transparent; color: #e2e8f0; font-size: 12.5px; }
+
+  .scroll-top { position: fixed; bottom: 28px; right: 28px; background: var(--purple); color: white; border: none; border-radius: 50%; width: 42px; height: 42px; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(139,92,246,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; z-index: 200; }
+  .scroll-top.visible { opacity: 1; }
+
+  ul { padding-left: 20px; margin: 10px 0 14px; }
+  li { margin-bottom: 5px; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px 20px 60px; }
+    .feature-grid, .pattern-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="project">Project 5 of 6</div>
+    <div class="name">Habit Tracker</div>
+  </div>
+  <div class="nav-section">Overview</div>
+  <a class="nav-link" href="#overview">What It Does</a>
+  <a class="nav-link" href="#gamification">Gamification Design</a>
+  <a class="nav-link" href="#features">Feature Scope</a>
+
+  <div class="nav-section">Technical</div>
+  <a class="nav-link" href="#stack">Tech Stack</a>
+  <a class="nav-link" href="#schema">Data Schema</a>
+  <a class="nav-link" href="#structure">App Structure</a>
+
+  <div class="nav-section">Build</div>
+  <a class="nav-link" href="#build-order">Build Order</a>
+  <a class="nav-link" href="#design-screens">Claude Design Screens</a>
+
+  <div class="nav-section">Prompts</div>
+  <a class="nav-link" href="#prompt-claude-code">Claude Code Prompt</a>
+  <a class="nav-link sub" href="#prompt-design-today">Today View</a>
+  <a class="nav-link sub" href="#prompt-design-progress">Progress / Stats</a>
+  <a class="nav-link sub" href="#prompt-design-add-habit">Add Habit</a>
+  <a class="nav-link sub" href="#prompt-design-weekly">Weekly Reveal</a>
+
+  <div class="nav-section">Deploy</div>
+  <a class="nav-link" href="#deploy">Deployment</a>
+</aside>
+
+<main class="main">
+
+  <div class="page-header">
+    <div class="tag">Project 5 — Web App (Full-Stack)</div>
+    <h1>Habit Tracker</h1>
+    <p>A full-stack web habit tracker built around proven gamification psychology — completion rings, flexible streaks with user agency, and competence feedback instead of empty badges.</p>
+    <div class="header-badges">
+      <span class="hbadge purple">React + Node.js</span>
+      <span class="hbadge">PostgreSQL + Prisma</span>
+      <span class="hbadge green">Gestalt Closure Rings</span>
+      <span class="hbadge amber">Research-backed Design</span>
+    </div>
+  </div>
+
+  <!-- ══ WHAT IT DOES ══ -->
+  <section class="section" id="overview">
+    <h2>🎯 What It Does</h2>
+    <p>Most habit apps feel like obligation factories — streaks that punish you, badges that mean nothing, and feature overload that buries the actual habit. This app is built differently, using the same psychological mechanisms behind Apple Watch's activity rings and Duolingo's streak system, applied with the restraint the research actually recommends.</p>
+    <p>The user creates habits, sets a realistic target frequency (not always "every day"), and each day sees a set of completion rings — one per habit. Tapping a ring fills it. When all rings close, the day is done. That's the primary loop.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card highlight">
+        <div class="fc-icon">⭕</div>
+        <div class="fc-title">Completion Rings</div>
+        <div class="fc-desc">Each habit is a circular progress ring. Tapping fills it. The Gestalt principle of closure makes a 90% filled ring feel impossible to leave open — the brain is hardwired to want to close it. This is the same mechanic Apple Watch used to drive a 49.5% behavior change in 160,000 people.</div>
+      </div>
+      <div class="feature-card highlight">
+        <div class="fc-icon">🎯</div>
+        <div class="fc-title">Flexible Streaks</div>
+        <div class="fc-desc">Users set their own target: "every day" or "4 out of 7 days". One built-in grace day per week so missing one day doesn't reset everything. Research shows uncontrollable streaks shift from motivational to obligational after ~31 days — this design avoids that trap.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📈</div>
+        <div class="fc-title">Competence Feedback</div>
+        <div class="fc-desc">Real growth metrics: completion rate %, longest streak ever, personal records auto-celebrated. "Your yoga completion went from 43% to 71% this month" means something. Empty points and badges do not.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🗓️</div>
+        <div class="fc-title">12-Week Heatmap</div>
+        <div class="fc-desc">GitHub-style contribution heatmap per habit showing patterns across 12 weeks. Makes consistency visible and satisfying without any external comparison or competition.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🎁</div>
+        <div class="fc-title">Weekly Reveal Card</div>
+        <div class="fc-desc">Every Sunday, an animated summary card appears showing the week's performance — total completions, best day, any personal records. The user doesn't know what the score will be until they open the app: variable reward magnitude in action.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🔔</div>
+        <div class="fc-title">Smart Reminders</div>
+        <div class="fc-desc">Per-habit notification at a user-set time. Automatically skipped if the habit is already completed for the day — no nagging for things already done.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ GAMIFICATION ══ -->
+  <section class="section" id="gamification">
+    <h2>🧠 Gamification Design (Research-Backed)</h2>
+    <p>Every design decision here maps directly to one of Tim Gabe's 7 research-backed patterns from studying 500+ gamified apps. The decisions are documented so you can explain them in your case study and Upwork profile.</p>
+
+    <div class="insight">
+      <div class="i-label">Core Philosophy</div>
+      <div class="i-text">Most apps build the scoreboard and forget to build the game. <strong>PBL — Points, Badges, Leaderboards</strong> are the three most documented gamification failures in product history (LinkedIn, Foursquare, Google News all scrapped them). This app runs on <strong>completion drive</strong> (Apple Watch rings), <strong>streaks with user agency</strong> (Duolingo's model), and <strong>competence feedback</strong> (Peloton's personal records). Max 3 gamification mechanics — the S-curve research shows more than that reverses engagement.</div>
+    </div>
+
+    <h3>What We're Using</h3>
+    <div class="pattern-grid">
+      <div class="pattern-card use">
+        <div class="pc-label">✅ Pattern 6 — Completion Drive</div>
+        <div class="pc-title">Rings (Gestalt Closure)</div>
+        <div class="pc-desc">The Gestalt principle of closure: a 90% filled circle creates an open loop the brain is hardwired to complete. Apple Watch drove 49.5% behavior change in 160,000 people with this single mechanic. Every habit = a ring that wants to be closed.</div>
+      </div>
+      <div class="pattern-card use">
+        <div class="pc-label">✅ Pattern 4 (Modified) — Streaks</div>
+        <div class="pc-title">Flexible Streaks with Agency</div>
+        <div class="pc-desc">Duolingo runs streaks with user-chosen goal levels and freeze mechanics. Research: uncontrollable streaks cause FOMO and obligation after ~31 days. Here: user sets their own frequency target + 1 grace day/week. The streak is something they control, not something that controls them.</div>
+      </div>
+      <div class="pattern-card use">
+        <div class="pc-label">✅ Pattern 7 — Competence</div>
+        <div class="pc-title">Real Progress Metrics</div>
+        <div class="pc-desc">Peloton members who see real output data (watts, personal records) work out 15% more than those who don't. Chess.com ELO. Garmin's training readiness. Show evidence of skill and consistency growth, not app-open frequency. Personal records auto-celebrated when set.</div>
+      </div>
+      <div class="pattern-card use">
+        <div class="pc-label">✅ Pattern 5 — Variable Reward</div>
+        <div class="pc-title">Weekly Reveal</div>
+        <div class="pc-desc">Anticipation of an unknown reward size is a stronger engagement driver than a known one. Every Sunday, an animated reveal shows the week's summary. The user doesn't know their "score" until the card opens. Pull toward what's next, not fear of losing what's built.</div>
+      </div>
+    </div>
+
+    <h3>What We're Avoiding</h3>
+    <div class="pattern-grid">
+      <div class="pattern-card avoid">
+        <div class="pc-label">❌ Pattern 1 — PBL Fallacy</div>
+        <div class="pc-title">Generic Points & Badges</div>
+        <div class="pc-desc">LinkedIn retired top voice badges in 2024 — badge-motivated users produced quantity over quality. Foursquare and Google News scrapped their systems for the same reason. No XP counter, no badge collection. Any milestone shown must represent real behavior.</div>
+      </div>
+      <div class="pattern-card avoid">
+        <div class="pc-label">❌ Pattern 3 — S-Curve</div>
+        <div class="pc-title">Feature Overload</div>
+        <div class="pc-desc">Habitica (the most gamified habit app ever) had 100% of study participants experience counterproductive effects — managing the game layer buried the actual habit. This app ships 3 gamification mechanics max. MVP ships 2: rings + streaks.</div>
+      </div>
+      <div class="pattern-card avoid">
+        <div class="pc-label">❌ Pattern 4 (Rigid)</div>
+        <div class="pc-title">Unbreakable Streaks</div>
+        <div class="pc-desc">Streaks the user can't influence become obligation, not motivation. The Nevada AG filed against Snapchat for addictive streak mechanics in 2024. No "you broke your streak" punishment screen. Grace days are built into the system by design, not as a premium feature.</div>
+      </div>
+      <div class="pattern-card avoid">
+        <div class="pc-label">❌ Pattern 2 (Unwinnable)</div>
+        <div class="pc-title">Global Leaderboards</div>
+        <div class="pc-desc">Strava's insight: global leaderboards are unwinnable at scale and therefore demotivating. The only meaningful competition is against your own past self. All comparisons in this app are personal — this week vs. last week, this month vs. last month.</div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="info-icon">💡</span>
+      <div><strong>This is your case study angle.</strong> Being able to cite the Frontiers in Psychology S-curve study, Gestalt closure, the Decision Lab streak research, and the Apple Watch 49.5% stat — and explain how each one maps to a specific design decision — is what separates a thoughtful portfolio project from a generic CRUD app. Lead with this on Upwork.</div>
+    </div>
+  </section>
+
+  <!-- ══ FEATURE SCOPE ══ -->
+  <section class="section" id="features">
+    <h2>📋 Feature Scope</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-dot mvp"></div>
+        <div class="ph-title">MVP — Core Loop First</div>
+        <div class="ph-tag mvp">Build First</div>
+      </div>
+      <div class="phase-body">
+        <ul>
+          <li>Create habits: name, emoji (picker), color (8 presets), target frequency (Daily / X days per week / specific weekdays)</li>
+          <li>Today view: all active habits as tappable completion rings</li>
+          <li>Animated SVG ring fill on tap (react-native-svg + Reanimated)</li>
+          <li>All-rings-closed celebration: animation + haptic success pattern</li>
+          <li>Streak counter per habit (flexible — counts toward the frequency target, not rigid daily)</li>
+          <li>Grace day: one missed day per 7-day window doesn't break the streak</li>
+          <li>Date navigation: tap arrows to view previous days' history</li>
+          <li>All data stored locally in SQLite (Expo SQLite) — offline, no account required</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-dot polish"></div>
+        <div class="ph-title">Polish — After Core Loop Works</div>
+        <div class="ph-tag polish">Round 2</div>
+      </div>
+      <div class="phase-body">
+        <ul>
+          <li>Progress tab: per-habit stats — completion rate %, current streak, longest streak ever, 12-week heatmap calendar</li>
+          <li>Weekly reveal card (Sunday): animated summary of the week with personal records highlighted</li>
+          <li>Per-habit reminder notifications (Expo Notifications) — only fires if habit not yet completed that day</li>
+          <li>Edit habit (name, emoji, color, frequency)</li>
+          <li>Archive / delete habits with confirmation</li>
+          <li>Drag to reorder habits on Today view</li>
+          <li>Haptic feedback on every ring tap (Expo Haptics)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-dot stretch"></div>
+        <div class="ph-title">Stretch — If Time Allows</div>
+        <div class="ph-tag stretch">Bonus</div>
+      </div>
+      <div class="phase-body">
+        <ul>
+          <li>Monthly overview: all habits in a full-month calendar grid</li>
+          <li>Dark mode (system preference detection)</li>
+          <li>Onboarding flow: 3-screen intro explaining the flexible streak philosophy</li>
+          <li>Export data as CSV</li>
+          <li>Home screen widget showing today's ring completion (requires EAS dev build)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TECH STACK ══ -->
+  <section class="section" id="stack">
+    <h2>🛠️ Tech Stack</h2>
+
+    <h3>Frontend</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Package</th><th>Purpose</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>React + TypeScript + Vite</td><td>UI framework + build tool</td><td>Same stack as P1 and P4</td></tr>
+          <tr><td>React Router v6</td><td>Client-side routing + protected routes</td><td>Auth guard redirects to /login if no JWT</td></tr>
+          <tr><td>TanStack Query v5</td><td>Server state, caching, mutations</td><td>All API calls go through useQuery / useMutation</td></tr>
+          <tr><td>Tailwind CSS + shadcn/ui</td><td>Styling + component library</td><td>Dialog, Badge, Select, Tabs, Tooltip</td></tr>
+          <tr><td>SVG (inline / custom component)</td><td>Completion rings</td><td>CSS transition on stroke-dashoffset for ring fill animation</td></tr>
+          <tr><td>Recharts</td><td>Weekly bar chart on stats page</td><td>BarChart of completions per day over last 4 weeks</td></tr>
+          <tr><td>Axios</td><td>HTTP client with JWT interceptor</td><td>Same pattern as P4</td></tr>
+          <tr><td>React Hook Form + Zod</td><td>Forms + validation</td><td>Add/edit habit form</td></tr>
+          <tr><td>date-fns</td><td>Date arithmetic</td><td>Streak windows, week ranges, formatting</td></tr>
+          <tr><td>Lucide React</td><td>Icons</td><td>Flame for streaks, check, trash, edit, etc.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Backend</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Package</th><th>Purpose</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Node.js + Express + TypeScript</td><td>REST API</td><td>Same as P4</td></tr>
+          <tr><td>Prisma ORM</td><td>Type-safe DB access + migrations</td><td>3 models: User, Habit, Completion</td></tr>
+          <tr><td>PostgreSQL (Supabase)</td><td>Database</td><td>Free tier, same as P4</td></tr>
+          <tr><td>jsonwebtoken + bcrypt</td><td>Auth</td><td>JWT 7-day expiry, bcrypt 10 rounds</td></tr>
+          <tr><td>zod</td><td>Request body validation</td><td>Validate all incoming data server-side</td></tr>
+          <tr><td>cors + dotenv</td><td>CORS + env vars</td><td>Whitelist Vercel frontend URL</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Infrastructure</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Service</th><th>What it hosts</th><th>Plan</th></tr></thead>
+        <tbody>
+          <tr><td>Vercel</td><td>React frontend</td><td>Free</td></tr>
+          <tr><td>Render</td><td>Node.js/Express backend</td><td>Free (cold starts after idle)</td></tr>
+          <tr><td>Supabase</td><td>PostgreSQL database</td><td>Free (500 MB)</td></tr>
+          <tr><td>GitHub Actions</td><td>CI: lint + typecheck on push</td><td>Free</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ DATA SCHEMA ══ -->
+  <section class="section" id="schema">
+    <h2>🗄️ Database Schema (Prisma)</h2>
+
+    <div class="schema-block">
+      <pre><code>// schema.prisma
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime  @default(now())
+  habits       Habit[]
+}
+
+model Habit {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  name        String
+  emoji       String       @default("⭐")
+  color       String       @default("#8b5cf6")
+  frequency   String       @default("daily")
+  // 'daily' | 'weekly:4' (4x per week) | 'weekdays:1,3,5' (Mon/Wed/Fri)
+  graceDays   Int          @default(1)
+  sortOrder   Int          @default(0)
+  isArchived  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  completions Completion[]
+}
+
+model Completion {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      String   // 'YYYY-MM-DD'
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])  // one completion per habit per day
+}</code></pre>
+    </div>
+
+    <h3>Key Calculations (Pure TypeScript in src/utils/streakLogic.ts)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Function</th><th>Logic</th></tr></thead>
+        <tbody>
+          <tr><td>getCurrentStreak()</td><td>Walk backwards from today through completion records. For 'daily': streak breaks when a day is missed AND the 7-day window's grace day is used. For 'weekly:N': check Mon–Sun windows — each needs N completions to count. Stop when a window fails.</td></tr>
+          <tr><td>getLongestStreak()</td><td>Same logic, walk entire history, track the max consecutive count seen.</td></tr>
+          <tr><td>getCompletionRate(days)</td><td>Count completed days in last N days ÷ expected days based on frequency × 100.</td></tr>
+          <tr><td>getWeeklySummary(week)</td><td>Sum completions Mon–Sun. Find best day (most completions). Compare streaks to personal bests to detect new records.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info">
+      <span class="info-icon">ℹ️</span>
+      <div>Keep all streak logic as <strong>pure functions</strong> in <code>src/utils/streakLogic.ts</code> — pass in arrays of completion records, no DB calls inside. The backend calls these after fetching completions from Prisma. This makes streak logic easy to test in isolation.</div>
+    </div>
+  </section>
+
+  <!-- ══ APP STRUCTURE ══ -->
+  <section class="section" id="structure">
+    <h2>📁 Project Structure</h2>
+    <pre><code>// Frontend (/client)
+src/
+  pages/
+    LoginPage.tsx           ← /login
+    RegisterPage.tsx        ← /register
+    DashboardPage.tsx       ← / (today's rings + weekly reveal banner)
+    ProgressPage.tsx        ← /progress (all habits stats + heatmaps)
+    HabitDetailPage.tsx     ← /habits/:id (single habit stats)
+    SettingsPage.tsx        ← /settings
+  components/
+    HabitRing.tsx           ← SVG completion ring (core component)
+    HabitCard.tsx           ← Ring + name + streak, used on Dashboard
+    HeatmapCalendar.tsx     ← 12-week contribution grid (SVG)
+    WeeklyRevealBanner.tsx  ← Monday summary card
+    StreakBadge.tsx         ← Flame icon + streak count
+    AddHabitDialog.tsx      ← shadcn Dialog with habit form
+    DateNavigator.tsx       ← Prev/next day arrows + date display
+  utils/
+    streakLogic.ts          ← Pure streak + completion rate functions
+    dateUtils.ts            ← Week windows, formatting helpers
+  lib/
+    api.ts                  ← Axios instance with JWT interceptor
+    queryClient.ts          ← TanStack Query client setup
+
+// Backend (/server)
+src/
+  routes/
+    auth.ts                 ← POST /register, POST /login, GET /me
+    habits.ts               ← CRUD for /habits
+    completions.ts          ← POST/DELETE /habits/:id/completions/:date
+    stats.ts                ← GET /stats (dashboard aggregates)
+  middleware/
+    auth.ts                 ← JWT verification → req.userId
+  utils/
+    streakLogic.ts          ← Same pure functions, called after Prisma fetch
+  lib/
+    prisma.ts               ← Prisma client singleton
+  index.ts                  ← Express app, CORS, route registration
+prisma/
+  schema.prisma</code></pre>
+  </section>
+
+  <!-- ══ BUILD ORDER ══ -->
+  <section class="section" id="build-order">
+    <h2>🔨 Build Order (8 Steps)</h2>
+    <ul class="build-list">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Backend scaffold + auth + Prisma</div>
+          <div class="step-desc">Init /server with Express + TypeScript. Write schema.prisma with User, Habit, Completion models. Run prisma migrate dev. Implement POST /auth/register and /auth/login with bcrypt + JWT. Write auth middleware. Test with Postman before touching frontend.</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Frontend scaffold + auth pages</div>
+          <div class="step-desc">Init /client with Vite + React + TypeScript. Install Tailwind, shadcn/ui, React Router, TanStack Query, Axios. Build Login and Register pages. Set up Axios JWT interceptor. Build ProtectedRoute wrapper that reads JWT from localStorage and redirects to /login if missing.</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Habits CRUD (backend + frontend)</div>
+          <div class="step-desc">Build GET/POST/PUT/DELETE /habits endpoints. Frontend: habit list in a sidebar or top section, AddHabitDialog (shadcn Dialog) with name, emoji picker, color swatches, and frequency selector. All mutations through TanStack Query useMutation with cache invalidation.</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">HabitRing SVG component — the core mechanic</div>
+          <div class="step-desc">Build the HabitRing component: SVG circle with animated stroke-dashoffset driven by a CSS transition (filled = full circle, empty = no stroke). Click toggles completion via POST/DELETE /habits/:id/completions/:date. Spend real time here — if the ring animation doesn't feel satisfying, nothing else matters.</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Dashboard (today view) + date navigation</div>
+          <div class="step-desc">Build DashboardPage: HabitCard grid for all active habits (ring + name + streak), DateNavigator for prev/next day. Fetch completions for selected date. "All done" state when every ring is closed — CSS animation/flash on the page. Fetch from GET /habits/:id/completions?date=YYYY-MM-DD.</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">Streak logic + backend stats endpoint</div>
+          <div class="step-desc">Write streakLogic.ts pure functions (getCurrentStreak, getLongestStreak, getCompletionRate). Build GET /stats endpoint: fetches all completions for the user, runs streak logic server-side, returns per-habit stats. Test streak edge cases heavily: grace days, weekly windows, frequency variants.</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <div class="step-title">Progress page + heatmap calendar</div>
+          <div class="step-desc">Build ProgressPage: overall stats (completion rate, longest streak), per-habit expandable rows each with HeatmapCalendar (12-week SVG grid of colored day cells). Auto-celebrate personal records on page load — show a subtle pulse animation on the stat that hit a new high.</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <div class="step-title">Weekly reveal banner + deploy</div>
+          <div class="step-desc">WeeklyRevealBanner: on Monday, check if the user has seen this week's summary (store seen state in localStorage). If not, show an animated banner at top of dashboard with last week's totals and any PRs. Dismiss + mark seen. Then: deploy frontend to Vercel, backend to Render, run prisma migrate deploy. Add GitHub Actions CI.</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ══ CLAUDE DESIGN SCREENS ══ -->
+  <section class="section" id="design-screens">
+    <h2>🎨 Claude Design — Screens to Design</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Screen</th><th>Priority</th><th>Key Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Today View</td><td>🔴 First</td><td>Primary loop — completion rings, the whole point of the app</td></tr>
+          <tr><td>Progress / Stats</td><td>🔴 First</td><td>Heatmap + real competence feedback per habit</td></tr>
+          <tr><td>Add / Edit Habit</td><td>🔴 First</td><td>Name, emoji, color, flexible frequency config</td></tr>
+          <tr><td>Weekly Reveal Card</td><td>🟡 Second</td><td>Sunday summary — the variable reward moment</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ CLAUDE CODE PROMPT ══ -->
+  <section class="section" id="prompt-claude-code">
+    <h2>🤖 Claude Code Prompt</h2>
+
+    <div class="prompt-block">
+      <div class="prompt-label">📋 Claude Code — Project 5: Habit Tracker</div>
+      <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+      <pre>PROJECT OVERVIEW
+================
+Project name: habit-tracker
+Type: Full-Stack Web App
+My role: Solo developer
+Repo: github.com/[your-username]/habit-tracker
+Structure: Monorepo — /client (React + Vite) and /server (Node.js + Express)
+
+WHAT IT DOES
+============
+A full-stack habit tracker built on research-backed gamification psychology. Core mechanic: Apple Watch-style SVG completion rings — each habit is a ring the user clicks to fill. The Gestalt closure principle (brain hardwired to complete open circles) drives engagement without any artificial points or badges. JWT-authenticated, PostgreSQL-backed, deployed on Vercel (frontend) + Render (backend).
+
+Gamification design choices (intentional, citable in portfolio):
+- Completion rings: Gestalt closure drive — a 90% filled circle creates an open loop the brain demands to close (Apple Watch used this to drive 49.5% behavior change in 160k people)
+- Flexible streaks: user sets their own frequency target (daily or X/week) + 1 grace day/week — avoids the "streak trap" where uncontrollable streaks shift from motivation to obligation after ~31 days
+- Competence feedback: real stats (completion rate %, personal records) not vanity points — Peloton members who see real output data work out 15% more
+- Weekly reveal banner: animated Monday summary — variable reward magnitude (anticipation of unknown score drives engagement more than a known reward)
+- Deliberately NO: generic points, global leaderboards, badge collections, or feature overload (S-curve research shows >3 gamification mechanics reverses engagement)
+
+TECH STACK
+==========
+Frontend (client/):
+- React 18 + TypeScript (strict mode)
+- Vite
+- React Router v6
+- TanStack Query v5 (server state, caching, mutations)
+- Axios (HTTP client, JWT interceptor)
+- Tailwind CSS + shadcn/ui
+- date-fns (date formatting, streak calculations)
+- Inline SVG with CSS transitions (completion rings — no external library needed)
+
+Backend (server/):
+- Node.js + Express + TypeScript
+- Prisma ORM + PostgreSQL (Supabase)
+- bcrypt (password hashing)
+- jsonwebtoken (JWT auth)
+- date-fns (server-side date logic)
+
+PAGES / ROUTES
+==============
+/login — Login page: email + password form, JWT stored in localStorage on success
+/register — Register page: name + email + password
+/dashboard — Main view (protected): habit rings for today, date navigator, weekly reveal banner on Mondays
+/progress — Stats & heatmap page (protected): per-habit stats and 12-week heatmap calendar
+/habits/new — Add habit dialog or page: name, emoji picker, color swatches, frequency selector
+/habits/:id — Habit detail: full stats + heatmap + edit/archive buttons
+/settings — Settings: account info, archived habits
+
+COMPONENT STRUCTURE
+===================
+client/src/
+  pages/
+    LoginPage.tsx
+    RegisterPage.tsx
+    DashboardPage.tsx
+    ProgressPage.tsx
+    HabitDetailPage.tsx
+    SettingsPage.tsx
+  components/
+    HabitRing.tsx         — SVG ring with CSS stroke-dashoffset animation
+    HabitCard.tsx         — ring + name + streak badge, click to toggle
+    HeatmapCalendar.tsx   — 12-week SVG grid
+    WeeklyRevealBanner.tsx — Monday summary banner
+    StreakBadge.tsx        — small pill showing current streak
+    AddHabitDialog.tsx     — shadcn Dialog with habit form
+    DateNavigator.tsx      — prev/next day arrows + date display
+  utils/
+    streakLogic.ts         — pure functions: getCurrentStreak(), getLongestStreak(), getCompletionRate()
+    dateUtils.ts           — toLocalDateString(), getWeekStart(), etc.
+  lib/
+    api.ts                 — Axios instance with JWT interceptor
+    queryClient.ts         — TanStack Query client config
+  main.tsx
+  App.tsx (React Router setup + ProtectedRoute)
+
+server/src/
+  routes/
+    auth.ts           — POST /auth/register, POST /auth/login
+    habits.ts         — GET/POST /habits, PUT/DELETE /habits/:id
+    completions.ts    — POST /habits/:id/completions/:date, DELETE /habits/:id/completions/:date
+    stats.ts          — GET /stats (per-habit streak + completion rate for all habits)
+  middleware/
+    auth.ts           — JWT verification middleware
+  utils/
+    streakLogic.ts    — same pure functions as client, shared logic
+  lib/
+    prisma.ts         — PrismaClient singleton
+  index.ts            — Express app setup, CORS, routes
+
+DATA SCHEMA (Prisma)
+====================
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  habits       Habit[]
+}
+
+model Habit {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  name        String
+  emoji       String       @default("⭐")
+  color       String       @default("#8b5cf6")
+  frequency   String       @default("daily")  // 'daily' | 'weekly:4' | 'weekdays:1,3,5'
+  graceDays   Int          @default(1)
+  sortOrder   Int          @default(0)
+  isArchived  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  completions Completion[]
+}
+
+model Completion {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      String   // 'YYYY-MM-DD'
+  createdAt DateTime @default(now())
+  @@unique([habitId, date])
+}
+
+KEY STREAK LOGIC (src/utils/streakLogic.ts — PURE functions, no DB calls)
+===========================================================================
+getCurrentStreak(frequency, graceDays, completionDates: string[]):
+  - 'daily': walk backwards day by day. Each 7-day window allows graceDays free misses. Streak breaks when a day is missed AND that window's grace is exhausted.
+  - 'weekly:N': walk backwards by Mon–Sun windows. Each window needs N completions. Streak = consecutive windows meeting target.
+  - 'weekdays:1,3,5': only target days count. Walk backwards through target days only. 1 grace per 7-day window.
+
+getLongestStreak(): same logic, walk entire history, track max.
+getCompletionRate(days=30): completed_days / expected_days × 100.
+
+All functions are PURE — accept string[] of 'YYYY-MM-DD' dates, no Prisma calls inside. Test in isolation before connecting to routes.
+
+DESIGN & STYLE
+==============
+Dark-first web app. Deep purple/violet backgrounds. Habit rings use each habit's chosen color. White text. Minimal chrome — the rings ARE the UI. Ring size: 80–100px diameter. Completion ring: SVG circle, CSS transition on stroke-dashoffset (400ms ease-out). "All done" state: subtle glow/pulse animation on the grid. Typography: system font stack, large bold streak numbers.
+
+TEAM STRUCTURE
+==============
+Solo. No review gates.
+
+GIT & WORKFLOW
+==============
+Branches: feature/auth, feature/habits-crud, feature/habit-ring, feature/dashboard, feature/streak-logic, feature/progress-screen, feature/weekly-reveal
+Conventional commits: feat:, fix:, chore:, refactor:
+
+CI/CD
+=====
+GitHub Actions (add after MVP): tsc + eslint on push to main, Prisma schema lint
+Frontend deploy: Vercel (auto-deploy on push to main)
+Backend deploy: Render (auto-deploy on push to main)
+DB: Supabase (run prisma migrate deploy on Render deploy hook)
+
+TIMELINE & PRIORITY
+===================
+Step 1 (Day 1):    Backend scaffold + Prisma + auth routes
+Step 2 (Day 2):    Frontend scaffold + auth pages + JWT interceptor
+Step 3 (Day 3):    Habits CRUD (backend routes + frontend AddHabitDialog + list)
+Step 4 (Day 3–4):  HabitRing SVG component + CSS ring animation
+Step 5 (Day 4–5):  Dashboard: habit grid + DateNavigator + completion toggle
+Step 6 (Day 5–6):  Streak logic (streakLogic.ts) + /stats endpoint
+Step 7 (Day 6–7):  Progress page + HeatmapCalendar
+Step 8 (Day 7–8):  WeeklyRevealBanner + deploy to Vercel + Render
+
+CONSTRAINTS & NOTES
+===================
+- All dates stored as 'YYYY-MM-DD' strings (never raw Date objects or UTC timestamps for date-only data).
+- "Today" = client's local date (format with date-fns format(new Date(), 'yyyy-MM-dd')), sent as a string to all API calls. Server never infers today's date from server time.
+- Completion toggle: POST to create, DELETE to remove. Use TanStack Query optimistic updates for instant ring fill feel.
+- @@unique([habitId, date]) on Completion — Prisma's upsert handles concurrent taps gracefully.
+- Weekly reveal: check on DashboardPage mount. If today is Monday and localStorage['weekRevealSeen_YYYY-MM-DD'] is not set (where date = this week's Monday), fetch last week's stats, show banner, set localStorage key on dismiss.
+- JWT: store in localStorage. Axios interceptor reads it and sets Authorization: Bearer header on every request. On 401, redirect to /login and clear localStorage.
+- graceDays applies per 7-day rolling window, not per calendar week.
+- IDs: Prisma cuid() for all PKs.
+- shadcn/ui components: Dialog for AddHabit, Table for stats, Tooltip for heatmap cells.
+
+WHAT I NEED FROM YOU NOW
+=========================
+Start with Step 1: scaffold the backend.
+
+1. Exact terminal commands to:
+   a) Create /server directory with TypeScript + Express
+   b) Install ALL backend packages: express, @types/express, typescript, ts-node, prisma, @prisma/client, bcrypt, @types/bcrypt, jsonwebtoken, @types/jsonwebtoken, date-fns, cors, @types/cors, dotenv
+
+2. Complete /server folder structure (every file and directory as described above).
+
+3. Write server/prisma/schema.prisma with the exact 3 models above (User, Habit, Completion).
+
+4. Write server/src/lib/prisma.ts — PrismaClient singleton with global caching for dev.
+
+5. Write server/src/middleware/auth.ts — JWT middleware: reads Authorization header, verifies token, attaches userId to req.user, sends 401 if missing or invalid.
+
+6. Write server/src/routes/auth.ts — POST /auth/register (hash password with bcrypt, create User, return JWT) and POST /auth/login (compare hash, return JWT). Include input validation (check required fields, return 400 with message if missing).
+
+7. Write server/src/index.ts — Express app with CORS, JSON body parser, routes mounted at /auth and /api, error handler middleware, listen on PORT env or 3001.
+
+8. Write server/src/utils/streakLogic.ts — the getCurrentStreak() function handling all 3 frequency types, plus getLongestStreak() and getCompletionRate(). Full implementation, not stubs.</pre>
+    </div>
+  </section>
+
+  <!-- ══ CLAUDE DESIGN PROMPTS ══ -->
+  <section class="section" id="prompt-design-today">
+    <h2>🎨 Claude Design — Components per Screen</h2>
+    <p>Open <a href="https://claude.ai/design" target="_blank">claude.ai/design</a>, create a new canvas per screen, and reference the component list below to describe what each screen needs.</p>
+
+    <div class="screen-card">
+      <div class="screen-header">
+        <div class="screen-num">1</div>
+        <div class="screen-title">Dashboard / Today View</div>
+      </div>
+      <div class="screen-body">
+        <ul style="margin:0;padding-left:1.2rem;line-height:2">
+          <li><strong>DateNavigator</strong> — shows the current date with left/right arrows to move between days</li>
+          <li><strong>HabitRingGrid</strong> — responsive grid containing all active habit cards</li>
+          <li><strong>HabitCard</strong> — individual habit card with ring, emoji, habit name, and streak badge; click to toggle complete</li>
+          <li><strong>CompletionRing</strong> — SVG circle ring that animates fill on click (CSS stroke-dashoffset transition)</li>
+          <li><strong>StreakBadge</strong> — small pill/chip below the ring showing the current streak number</li>
+          <li><strong>AllDoneBanner</strong> — appears at the top when every ring is closed for the selected day</li>
+          <li><strong>WeeklyRevealBanner</strong> — shown on Mondays with last week's summary stats; has a dismiss button</li>
+          <li><strong>AddHabitButton</strong> — floating or bottom button to open the AddHabitDialog</li>
+          <li><strong>EmptyState</strong> — shown when the user has no habits yet; encourages adding a first one</li>
+          <li><strong>NavBar</strong> — top nav or sidebar links to Dashboard, Progress, Settings</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="screen-card" id="prompt-design-progress">
+      <div class="screen-header">
+        <div class="screen-num">2</div>
+        <div class="screen-title">Progress / Stats Page</div>
+      </div>
+      <div class="screen-body">
+        <ul style="margin:0;padding-left:1.2rem;line-height:2">
+          <li><strong>OverallStatsSummary</strong> — top section showing total active habits, overall completion rate this month, and longest current streak</li>
+          <li><strong>HabitStatRow</strong> — one row per habit: name, emoji, current streak, longest streak ever, completion rate %</li>
+          <li><strong>HeatmapCalendar</strong> — 12-week grid of day cells (like GitHub's contribution graph) colored by completion; one per habit</li>
+          <li><strong>PersonalRecordBadge</strong> — visual highlight on a stat when it's the user's personal best (e.g., subtle glow or "🏆 PR" label)</li>
+          <li><strong>ExpandableHabitSection</strong> — each habit row expands to reveal the heatmap and detailed stats</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="screen-card" id="prompt-design-add-habit">
+      <div class="screen-header">
+        <div class="screen-num">3</div>
+        <div class="screen-title">Add / Edit Habit Dialog</div>
+      </div>
+      <div class="screen-body">
+        <ul style="margin:0;padding-left:1.2rem;line-height:2">
+          <li><strong>HabitNameInput</strong> — text field for the habit name</li>
+          <li><strong>EmojiPicker</strong> — grid of emoji options to represent the habit; shows selected emoji large in preview</li>
+          <li><strong>ColorSwatches</strong> — row of 8 preset color circles; selected color = the ring's fill color</li>
+          <li><strong>FrequencySelector</strong> — the core differentiator: options for Every day, 3×/4×/5×/6× per week, or specific weekdays (Mon/Tue/Wed/Thu/Fri/Sat/Sun toggles)</li>
+          <li><strong>SaveButton</strong> — confirms and saves the habit</li>
+          <li><strong>CancelButton</strong> — closes the dialog without saving</li>
+          <li><strong>DeleteButton</strong> — archive/delete the habit (only shown in edit mode)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="screen-card" id="prompt-design-weekly">
+      <div class="screen-header">
+        <div class="screen-num">4</div>
+        <div class="screen-title">Weekly Reveal Banner</div>
+      </div>
+      <div class="screen-body">
+        <ul style="margin:0;padding-left:1.2rem;line-height:2">
+          <li><strong>WeekDateRange</strong> — shows the week period (e.g., "June 15 – 21, 2026")</li>
+          <li><strong>CompletionCount</strong> — "X out of Y possible completions" with a percentage</li>
+          <li><strong>BestDayLabel</strong> — highlights the day of the week where most habits were done</li>
+          <li><strong>PersonalRecordList</strong> — list of habits that hit a new streak record that week, each with a trophy icon</li>
+          <li><strong>DismissButton</strong> — closes the banner; once dismissed, doesn't reappear until next Monday</li>
+        </ul>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══ DEPLOYMENT ══ -->
+  <section class="section" id="deploy">
+    <h2>🚀 Deployment</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Service</th><th>What goes there</th><th>How to deploy</th></tr></thead>
+        <tbody>
+          <tr><td>Vercel</td><td>React frontend (/client)</td><td>Connect GitHub repo → set root to /client → auto-deploy on push to main</td></tr>
+          <tr><td>Render</td><td>Express backend (/server)</td><td>Connect GitHub repo → set root to /server → build: <code>npm run build</code> → start: <code>node dist/index.js</code></td></tr>
+          <tr><td>Supabase</td><td>PostgreSQL database</td><td>Create project → copy DATABASE_URL → add to Render env vars → run <code>prisma migrate deploy</code> on deploy hook</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info">
+      <span class="info-icon">ℹ️</span>
+      <div><strong>Environment variables needed:</strong> On Render — <code>DATABASE_URL</code> (Supabase), <code>JWT_SECRET</code>, <code>PORT</code>. On Vercel — <code>VITE_API_URL</code> pointing to your Render backend URL. Set <code>CORS_ORIGIN</code> on Render to your Vercel URL to avoid CORS errors in production.</div>
+    </div>
+
+    <div class="tip">
+      <span class="info-icon">💡</span>
+      <div><strong>Case study angle:</strong> Lead with the research. "I studied gamification psychology literature before writing a single line of code" is a differentiated story. Cite the Frontiers in Psychology S-curve finding, the Gestalt closure principle, the Apple Watch 49.5% behavior change stat, and the Decision Lab streak research. Explain how each research finding mapped to a specific design decision. That's what gets you noticed on Upwork over developers who just build feature lists.</div>
+    </div>
+  </section>
+
+</main>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const st = document.getElementById('scrollTop');
+window.addEventListener('scroll', () => {
+  st.classList.toggle('visible', window.scrollY > 300);
+});
+
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section[id]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector('.nav-link[href="#' + entry.target.id + '"]');
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -75% 0px' });
+sections.forEach(s => observer.observe(s));
+
+function copyPrompt(btn) {
+  const block = btn.closest('.prompt-block');
+  const pre = block.querySelector('pre');
+  const text = pre ? pre.innerText : '';
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.style.opacity = '1';
+    setTimeout(() => { btn.textContent = orig; btn.style.opacity = ''; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>
