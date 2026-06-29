@@ -1,25 +1,24 @@
-// Cadence database schema.
-//
-// Dev uses SQLite (zero local setup). For production, switch `provider` to
-// "postgresql" and point DATABASE_URL at Supabase — the models below are fully
-// portable (no SQLite-only or Postgres-only features).
+// Cadence database schema — PostgreSQL (Supabase) for both dev and production.
+// DATABASE_URL is the Supabase Session-pooler connection string (IPv4, supports
+// migrations). Set it in server/.env locally and in the Render dashboard for prod.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String         @id @default(cuid())
+  email        String         @unique
   passwordHash String
   name         String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime       @default(now())
   habits       Habit[]
+  journal      JournalEntry[]
 }
 
 model Habit {
@@ -49,4 +48,18 @@ model Completion {
 
   @@unique([habitId, date]) // one completion per habit per day
   @@index([habitId])
+}
+
+model JournalEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date       String // 'YYYY-MM-DD'
+  text       String
+  prompt     String
+  reflection String? // optional saved AI reflection
+  savedAt    DateTime @default(now()) @updatedAt
+
+  @@unique([userId, date]) // one entry per user per day
+  @@index([userId])
 }

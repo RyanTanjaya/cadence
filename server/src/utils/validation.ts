@@ -53,5 +53,16 @@ export const reorderSchema = z.object({
   order: z.array(z.string()).min(1),
 });
 
+export const journalEntrySchema = z.object({
+  text: z.string().max(20000),
+  prompt: z.string().max(500).default(''),
+  reflection: z.string().max(8000).optional(),
+});
+
+export const reflectSchema = z.object({
+  text: z.string().trim().min(1).max(20000),
+  prompt: z.string().max(500).default(''),
+});
+
 export type CreateHabitInput = z.infer<typeof createHabitSchema>;
 export type UpdateHabitInput = z.infer<typeof updateHabitSchema>;

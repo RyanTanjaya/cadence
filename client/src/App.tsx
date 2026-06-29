@@ -4,6 +4,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import NavBar from './components/layout/NavBar';
 import Dashboard from './pages/Dashboard';
 import HabitDetailPage from './pages/HabitDetailPage';
+import Journal from './pages/Journal';
 import LoginPage from './pages/LoginPage';
 import Progress from './pages/Progress';
 import RegisterPage from './pages/RegisterPage';
@@ -38,6 +39,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/progress" element={<Progress />} />
+          <Route path="/journal" element={<Journal />} />
           <Route path="/habits/:id" element={<HabitDetailPage />} />
           <Route path="/settings" element={<Settings />} />
         </Route>

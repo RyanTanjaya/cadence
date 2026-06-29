@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { ChartIcon, SettingsIcon, TodayIcon } from '../icons';
+import { ChartIcon, JournalIcon, SettingsIcon, TodayIcon } from '../icons';
 import ThemeToggle from './ThemeToggle';
 
 const LINKS = [
   { to: '/', label: 'Today', Icon: TodayIcon, end: true },
   { to: '/progress', label: 'Progress', Icon: ChartIcon, end: false },
+  { to: '/journal', label: 'Journal', Icon: JournalIcon, end: false },
   { to: '/settings', label: 'Settings', Icon: SettingsIcon, end: false },
 ];
 

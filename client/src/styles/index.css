@@ -1852,6 +1852,12 @@ ul {
   }
 }
 
+/* The Journal page has its own full dark background, so the light bottom
+   scrim doesn't belong there. */
+body.journal-page::after {
+  display: none !important;
+}
+
 /* ----------- completion rings: never show a stray box around the ring -------- */
 /* Applies everywhere the CompletionRing renders — habit cards AND the add/edit
    dialog preview. Keyboard focus shows an intentional ring on the card instead. */
@@ -1873,6 +1879,17 @@ ul {
 .ring-grid > *:focus-visible .habit-card {
   outline: none !important;
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
+}
+
+/* Journal loading dot */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

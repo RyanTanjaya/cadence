@@ -109,3 +109,11 @@ export const Trash = (p: IconProps) => (
     <path d="M10 11v6M14 11v6" />
   </svg>
 );
+
+export const JournalIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M5 5a2 2 0 0 1 2-2h11a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H7a2 2 0 0 0-2 2z" />
+    <path d="M5 19a2 2 0 0 1 2-2h12" />
+    <path d="M9 7h6M9 10.5h6" />
+  </svg>
+);

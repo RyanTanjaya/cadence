@@ -6,6 +6,7 @@ import authRouter from './routes/auth';
 import habitsRouter from './routes/habits';
 import completionsRouter from './routes/completions';
 import statsRouter from './routes/stats';
+import journalRouter from './routes/journal';
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/auth', authRouter);
 app.use('/api/habits', habitsRouter);
 app.use('/api/habits', completionsRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/journal', journalRouter);
 
 // 404
 app.use((_req, res) => {
