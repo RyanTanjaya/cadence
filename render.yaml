@@ -1,13 +1,14 @@
 # Render blueprint for the Cadence API.
-# Before first deploy: in server/prisma/schema.prisma set `provider = "postgresql"`
-# and point DATABASE_URL at your Supabase Postgres connection string.
+# DATABASE_URL must be the Supabase Session-pooler connection string (IPv4).
+# --include=dev is required because NODE_ENV=production otherwise makes npm skip
+# devDependencies (typescript, prisma CLI) that the build needs.
 services:
   - type: web
     name: cadence-api
     runtime: node
     rootDir: server
     plan: free
-    buildCommand: npm install && npm run build && npx prisma db push
+    buildCommand: npm install --include=dev && npm run build && npx prisma db push
     startCommand: node dist/index.js
     envVars:
       - key: DATABASE_URL
